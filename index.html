@@ -873,6 +873,7 @@
         addLine('  /clear     — clear terminal', 'info');
         addLine('  /snake     — play snake 🐍', 'info');
         addLine('  /hacknet   — hacking simulation 💻', 'info');
+        addLine('  /bored     — escape to SKIDNET-OS 🎮', 'info');
         addLine('  /about     — about xAGENT', 'info');
         addLine('═══════════════════════════════════════', 'accent');
       }
@@ -902,6 +903,10 @@
         addLine('xAGENT — digital presence interface', 'info');
         addLine('old head gamer · secure node · v1.0', 'info');
         addLine('type /help for commands', 'accent');
+      }
+
+      function cmdBored() {
+        window.location.href = 'https://01357101010.github.io/01357101010-0135710101.io/';
       }
 
       function cmdUnknown(cmd) {
@@ -1268,6 +1273,8 @@
         } else if (lower === '/hacknet') {
           stopSnakeGame();
           hacknetInit();
+        } else if (lower === '/bored') {
+          cmdBored();
         } else {
           cmdUnknown(trimmed);
         }
@@ -1305,7 +1312,7 @@
 
       // Initial hints
       addLine('type /help to see commands', 'accent');
-      addLine('→ /snake for Snake  ·  /hacknet for hacking sim', 'info');
+      addLine('→ /snake · /hacknet · /bored', 'info');
     })();
 
   </script>
