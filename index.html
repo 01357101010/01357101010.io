@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0a0a0a" />
-  <title>xAGENT</title>
+  <title>xAGENT · shell + hacknet</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -296,6 +296,7 @@
       box-shadow: 0 0 12px rgba(255,255,255,0.15);
     }
 
+    /* terminal + shell */
     .terminal {
       border: 1px solid rgba(255,255,255,0.06);
       border-radius: 24px; padding: 16px;
@@ -306,10 +307,12 @@
     }
     .terminal-screen {
       background: #0f0f0f; border-radius: 16px;
-      padding: 22px; min-height: 260px;
+      padding: 22px; min-height: 320px;
       background-image: linear-gradient(rgba(255,255,255,0.01) 1px, transparent 1px),
                         linear-gradient(90deg, rgba(255,255,255,0.01) 1px, transparent 1px);
       background-size: 24px 24px;
+      display: flex;
+      flex-direction: column;
     }
     .terminal-top {
       display: flex; justify-content: space-between;
@@ -321,10 +324,21 @@
       border-radius: 50%; background: #2a2a2a;
     }
     .lights i:first-child { background: #888; }
+    .scanline {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #888, transparent);
+      opacity: 0.2; animation: scan 4s linear infinite;
+      margin: 6px 0;
+    }
+    @keyframes scan {
+      0% { transform: translateY(10px); }
+      100% { transform: translateY(200px); }
+    }
+
     .status-box {
-      margin-top: 22px;
+      margin-top: 12px;
       border: 1px solid rgba(255,255,255,0.04);
-      padding: 16px 18px; border-radius: 14px;
+      padding: 12px 16px; border-radius: 14px;
       background: rgba(255,255,255,0.015);
     }
     .status-label {
@@ -336,23 +350,63 @@
       color: #ddd; margin: 6px 0 2px;
     }
     .status-sub { color: #777; font-size: 0.8rem; }
-    .log { margin-top: 18px; display: grid; gap: 8px; }
-    .log-row {
-      display: grid; grid-template-columns: 80px 1fr auto;
-      gap: 8px; padding: 9px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.03);
+
+    /* shell output & input */
+    .shell-output {
+      margin: 12px 0 8px;
+      padding: 8px 4px;
+      font-family: ui-monospace, 'SF Mono', monospace;
+      font-size: 0.78rem;
+      line-height: 1.7;
+      color: #b0b0b0;
+      max-height: 240px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .shell-output .cmd-line { color: #8affb0; }
+    .shell-output .cmd-line::before { content: '> '; color: #4a7a5a; }
+    .shell-output .info { color: #9a9a9a; }
+    .shell-output .accent { color: #8affb0; }
+    .shell-output .warn { color: #c9a96b; }
+    .shell-output .error { color: #d97a7a; }
+    .shell-output .game-line { color: #c0c0c0; letter-spacing: 0.5px; }
+    .shell-output .grid-snake { font-family: ui-monospace, monospace; white-space: pre; line-height: 1.1; }
+    .shell-output .hack-line { color: #7ab8d9; }
+    .shell-output .hack-accent { color: #8affb0; }
+    .shell-output .hack-warn { color: #d9b86b; }
+    .shell-output .hack-error { color: #d97a7a; }
+
+    .shell-input-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding-top: 12px;
+      margin-top: 4px;
+    }
+    .shell-prompt {
+      color: #8affb0;
       font-family: ui-monospace, monospace;
-      font-size: 0.7rem; color: #7a7a7a;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
     }
-    .ok { color: #aaa; }
-    .scanline {
-      height: 1px;
-      background: linear-gradient(90deg, transparent, #888, transparent);
-      opacity: 0.2; animation: scan 4s linear infinite;
+    .shell-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: #eaeaea;
+      font-family: ui-monospace, monospace;
+      font-size: 0.85rem;
+      padding: 6px 0;
+      outline: none;
+      caret-color: #8affb0;
     }
-    @keyframes scan {
-      0% { transform: translateY(10px); }
-      100% { transform: translateY(200px); }
+    .shell-input::placeholder {
+      color: #4a4a4a;
+      font-style: italic;
     }
 
     .lookup-overlay {
@@ -511,9 +565,7 @@
       .hero { grid-template-columns: 1fr; gap: 40px; padding: 40px 0; }
     }
     @media (max-width: 500px) {
-      .terminal-screen { min-height: 240px; padding: 16px; }
-      .log-row { grid-template-columns: 60px 1fr; }
-      .log-row span:last-child { display: none; }
+      .terminal-screen { min-height: 280px; padding: 16px; }
       .lookup-grid { grid-template-columns: 1fr; }
       .lookup-avatar { width: 72px; height: 72px; }
       .lookup-username { font-size: 1.3rem; }
@@ -595,23 +647,32 @@
           </div>
         </div>
 
+        <!-- TERMINAL / SHELL -->
         <div class="terminal">
-          <div class="terminal-screen">
+          <div class="terminal-screen" id="terminalScreen">
             <div class="terminal-top">
               <div class="lights"><i></i><i></i><i></i></div>
               <span>NODE / SECURE</span>
             </div>
             <div class="scanline"></div>
-            <div class="status-box">
+
+            <!-- Status box (brief) -->
+            <div class="status-box" style="margin-top:8px;">
               <div class="status-label">system status</div>
               <div class="status-value">ACTIVE</div>
-              <div class="status-sub">all systems nominal</div>
+              <div class="status-sub">all systems nominal · type /help</div>
             </div>
-            <div class="log">
-              <div class="log-row"><span>18:44:01</span><span>interface ready</span><span class="ok">OK</span></div>
-              <div class="log-row"><span>18:44:03</span><span>encrypted channel</span><span class="ok">OK</span></div>
-              <div class="log-row"><span>18:44:08</span><span>public endpoint live</span><span class="ok">LIVE</span></div>
-              <div class="log-row"><span>18:44:12</span><span>awaiting input</span><span>...</span></div>
+
+            <!-- Shell output area -->
+            <div class="shell-output" id="shellOutput">
+              <div class="info">xAGENT shell v1.0 — type /help for commands</div>
+              <div class="info">Use /snake for Snake 🐍  ·  /hacknet for hacking sim</div>
+            </div>
+
+            <!-- Shell input -->
+            <div class="shell-input-row">
+              <span class="shell-prompt">❯</span>
+              <input type="text" class="shell-input" id="shellInput" placeholder="type a command..." autocomplete="off" spellcheck="false" />
             </div>
           </div>
         </div>
@@ -780,6 +841,473 @@
     const saved = localStorage.getItem(NOTE_KEY);
     if (saved) noteInput.value = saved;
     noteInput.addEventListener('input', () => localStorage.setItem(NOTE_KEY, noteInput.value));
+
+    /* ============================================================
+       SHELL + SNAKE + HACKNET
+       ============================================================ */
+    (function() {
+      const outputEl = document.getElementById('shellOutput');
+      const inputEl = document.getElementById('shellInput');
+      const terminalScreen = document.getElementById('terminalScreen');
+
+      // --- helper: add line to output ---
+      function addLine(text, className = 'info') {
+        const div = document.createElement('div');
+        div.className = className;
+        div.textContent = text;
+        outputEl.appendChild(div);
+        outputEl.scrollTop = outputEl.scrollHeight;
+        while (outputEl.children.length > 200) outputEl.removeChild(outputEl.firstChild);
+      }
+
+      function clearOutput() {
+        outputEl.innerHTML = '';
+      }
+
+      // --- command handlers ---
+      function cmdHelp() {
+        addLine('═══════════════════════════════════════', 'accent');
+        addLine('  /help      — show this', 'info');
+        addLine('  /stats     — player stats', 'info');
+        addLine('  /discord   — discord profile', 'info');
+        addLine('  /clear     — clear terminal', 'info');
+        addLine('  /snake     — play snake 🐍', 'info');
+        addLine('  /hacknet   — hacking simulation 💻', 'info');
+        addLine('  /about     — about xAGENT', 'info');
+        addLine('═══════════════════════════════════════', 'accent');
+      }
+
+      function cmdStats() {
+        addLine('┌─ PLAYER STATS ─────────────────┐', 'accent');
+        addLine('│  Rank    : #04', 'info');
+        addLine('│  Wins    : 1,247', 'info');
+        addLine('│  Level   : 82', 'info');
+        addLine('│  XP      : 8,200 / 10,000', 'info');
+        addLine('│  Status  : ONLINE · READY', 'info');
+        addLine('└────────────────────────────────┘', 'accent');
+      }
+
+      function cmdDiscord() {
+        addLine('╔═ DISCORD LOOKUP ══════════════╗', 'accent');
+        addLine('║  User   : 星雲', 'info');
+        addLine('║  Handle : @vengesparkdpr', 'info');
+        addLine('║  ID     : 1105562400238870628', 'info');
+        addLine('║  Joined : May 9, 2023', 'info');
+        addLine('║  Badge  : House Bravery', 'info');
+        addLine('╚════════════════════════════════╝', 'accent');
+        addLine('→ Click "My Discord" button for full card', 'warn');
+      }
+
+      function cmdAbout() {
+        addLine('xAGENT — digital presence interface', 'info');
+        addLine('old head gamer · secure node · v1.0', 'info');
+        addLine('type /help for commands', 'accent');
+      }
+
+      function cmdUnknown(cmd) {
+        addLine(`unknown command: "${cmd}". type /help`, 'error');
+      }
+
+      // ============================================================
+      //  SNAKE GAME
+      // ============================================================
+      const SNAKE_WIDTH = 20;
+      const SNAKE_HEIGHT = 12;
+      const CELL = '·';
+      const SNAKE_BODY = '█';
+      const SNAKE_HEAD = '▓';
+      const FOOD = '★';
+
+      let snakeGameActive = false;
+      let snakeInterval = null;
+      let snakeState = null;
+
+      function stopSnakeGame() {
+        if (snakeInterval) {
+          clearInterval(snakeInterval);
+          snakeInterval = null;
+        }
+        snakeGameActive = false;
+        snakeState = null;
+      }
+
+      function renderSnakeBoard() {
+        if (!snakeState) return '';
+        const { snake, food } = snakeState;
+        const board = [];
+        for (let y = 0; y < SNAKE_HEIGHT; y++) {
+          let row = '';
+          for (let x = 0; x < SNAKE_WIDTH; x++) {
+            const isHead = snake[0].x === x && snake[0].y === y;
+            const isBody = snake.some((seg, i) => i > 0 && seg.x === x && seg.y === y);
+            const isFood = food.x === x && food.y === y;
+            if (isHead) row += SNAKE_HEAD;
+            else if (isBody) row += SNAKE_BODY;
+            else if (isFood) row += FOOD;
+            else row += CELL;
+          }
+          board.push(row);
+        }
+        return board.join('\n');
+      }
+
+      function updateSnakeOutput() {
+        const existing = outputEl.querySelectorAll('.snake-board, .snake-meta');
+        existing.forEach(el => el.remove());
+        if (!snakeState || !snakeGameActive) return;
+
+        const meta = document.createElement('div');
+        meta.className = 'snake-meta info';
+        meta.textContent = `🐍 score: ${snakeState.score}  |  length: ${snakeState.snake.length}  |  arrows to move, ESC to quit`;
+        outputEl.appendChild(meta);
+
+        const boardDiv = document.createElement('div');
+        boardDiv.className = 'snake-board grid-snake';
+        boardDiv.textContent = renderSnakeBoard();
+        outputEl.appendChild(boardDiv);
+
+        outputEl.scrollTop = outputEl.scrollHeight;
+      }
+
+      function resetSnake() {
+        stopSnakeGame();
+        const startSnake = [
+          { x: 10, y: 6 },
+          { x: 9, y: 6 },
+          { x: 8, y: 6 },
+        ];
+        snakeState = {
+          snake: startSnake,
+          food: { x: 5, y: 3 },
+          dir: { dx: 1, dy: 0 },
+          score: 0,
+          nextDir: null,
+        };
+        snakeGameActive = true;
+        updateSnakeOutput();
+      }
+
+      function moveSnake() {
+        if (!snakeState || !snakeGameActive) return;
+
+        if (snakeState.nextDir) {
+          const nd = snakeState.nextDir;
+          if (nd.dx !== -snakeState.dir.dx || nd.dy !== -snakeState.dir.dy) {
+            snakeState.dir = nd;
+          }
+          snakeState.nextDir = null;
+        }
+
+        const { snake, food, dir } = snakeState;
+        const head = snake[0];
+        const newHead = { x: head.x + dir.dx, y: head.y + dir.dy };
+
+        if (newHead.x < 0 || newHead.x >= SNAKE_WIDTH || newHead.y < 0 || newHead.y >= SNAKE_HEIGHT) {
+          addLine('💀 game over — hit the wall', 'error');
+          stopSnakeGame();
+          updateSnakeOutput();
+          return;
+        }
+
+        if (snake.some(seg => seg.x === newHead.x && seg.y === newHead.y)) {
+          addLine('💀 game over — bit yourself', 'error');
+          stopSnakeGame();
+          updateSnakeOutput();
+          return;
+        }
+
+        const ateFood = (newHead.x === food.x && newHead.y === food.y);
+        snakeState.snake = [newHead, ...snake];
+
+        if (ateFood) {
+          snakeState.score += 10;
+          let newFood;
+          let tries = 0;
+          do {
+            newFood = {
+              x: Math.floor(Math.random() * SNAKE_WIDTH),
+              y: Math.floor(Math.random() * SNAKE_HEIGHT),
+            };
+            tries++;
+          } while (snakeState.snake.some(seg => seg.x === newFood.x && seg.y === newFood.y) && tries < 500);
+          snakeState.food = newFood;
+        } else {
+          snakeState.snake.pop();
+        }
+
+        updateSnakeOutput();
+      }
+
+      function startSnakeGame() {
+        stopSnakeGame();
+        clearOutput();
+        addLine('🐍 SNAKE — use arrow keys to move, ESC to quit', 'accent');
+        resetSnake();
+
+        snakeInterval = setInterval(() => {
+          moveSnake();
+        }, 220);
+      }
+
+      // ============================================================
+      //  HACKNET SIMULATION
+      // ============================================================
+      let hacknetActive = false;
+      let hacknetState = null;
+      let hacknetTimer = null;
+
+      function stopHacknet() {
+        if (hacknetTimer) {
+          clearInterval(hacknetTimer);
+          hacknetTimer = null;
+        }
+        hacknetActive = false;
+        hacknetState = null;
+      }
+
+      function hacknetRender() {
+        const existing = outputEl.querySelectorAll('.hacknet-board, .hacknet-meta, .hacknet-footer');
+        existing.forEach(el => el.remove());
+        if (!hacknetState || !hacknetActive) return;
+
+        // Meta line
+        const meta = document.createElement('div');
+        meta.className = 'hacknet-meta hack-line';
+        meta.textContent = `💻 HACKNET v1.0  |  node: ${hacknetState.node}  |  credits: ${hacknetState.credits}  |  trace: ${hacknetState.trace}%  |  type "help" or "exit"`;
+        outputEl.appendChild(meta);
+
+        // Main board
+        const boardDiv = document.createElement('div');
+        boardDiv.className = 'hacknet-board grid-snake';
+        boardDiv.style.color = '#7ab8d9';
+        boardDiv.style.lineHeight = '1.2';
+        boardDiv.textContent = hacknetState.display;
+        outputEl.appendChild(boardDiv);
+
+        // Footer log
+        const footer = document.createElement('div');
+        footer.className = 'hacknet-footer hack-line';
+        footer.textContent = hacknetState.log;
+        outputEl.appendChild(footer);
+
+        outputEl.scrollTop = outputEl.scrollHeight;
+      }
+
+      function hacknetInit() {
+        stopHacknet();
+        clearOutput();
+        hacknetActive = true;
+        hacknetState = {
+          node: 'home',
+          credits: 100,
+          trace: 0,
+          display: `
+╔══════════════════════════════════════════════════════════╗
+║  ██╗  ██╗ █████╗  ██████╗██╗  ██╗███╗   ██╗███████╗████████╗ ║
+║  ██║  ██║██╔══██╗██╔════╝██║ ██╔╝████╗  ██║██╔════╝╚══██╔══╝ ║
+║  ███████║███████║██║     █████╔╝ ██╔██╗ ██║█████╗     ██║    ║
+║  ██╔══██║██╔══██║██║     ██╔═██╗ ██║╚██╗██║██╔══╝     ██║    ║
+║  ██║  ██║██║  ██║╚██████╗██║  ██╗██║ ╚████║███████╗   ██║    ║
+║  ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝   ╚═╝    ║
+╠══════════════════════════════════════════════════════════╣
+║  [>] connected to node: home                              ║
+║  [>] credits: 100  |  trace: 0%                           ║
+║  [>] type "help" for commands                             ║
+╚══════════════════════════════════════════════════════════╝`,
+          log: 'system ready. awaiting command...',
+          nodes: {
+            home: { name: 'home', security: 1, credits: 100, files: ['readme.txt'] },
+            darknet: { name: 'darknet', security: 3, credits: 500, files: ['data.bin', 'key.enc'] },
+            core: { name: 'core', security: 5, credits: 2000, files: ['core.sys', 'admin.log'] },
+          },
+          currentFiles: ['readme.txt'],
+        };
+        hacknetRender();
+      }
+
+      function hacknetHandleCommand(cmd) {
+        if (!hacknetState || !hacknetActive) return;
+        const lower = cmd.trim().toLowerCase();
+        if (!lower) return;
+
+        // echo command in hacknet style
+        addLine(`> ${cmd}`, 'hack-accent');
+
+        const parts = lower.split(/\s+/);
+        const base = parts[0];
+
+        switch (base) {
+          case 'help':
+            hacknetState.log = 'commands: scan, connect <node>, decrypt, cash, exit, status';
+            break;
+          case 'scan':
+            hacknetState.log = 'scanning network... found nodes: home, darknet, core';
+            break;
+          case 'connect': {
+            const target = parts[1];
+            if (!target) {
+              hacknetState.log = 'usage: connect <node>';
+              break;
+            }
+            const node = hacknetState.nodes[target];
+            if (!node) {
+              hacknetState.log = `node "${target}" not found. try scan.`;
+              break;
+            }
+            hacknetState.node = target;
+            hacknetState.credits = node.credits;
+            hacknetState.currentFiles = node.files || [];
+            hacknetState.log = `connected to ${target}. security level ${node.security}.`;
+            hacknetState.display = hacknetState.display.replace(/connected to node: \w+/, `connected to node: ${target}`);
+            break;
+          }
+          case 'decrypt':
+            if (hacknetState.node === 'home') {
+              hacknetState.log = 'nothing to decrypt on home node.';
+            } else {
+              hacknetState.credits += 50;
+              hacknetState.log = `decrypted files on ${hacknetState.node}. +50 credits.`;
+            }
+            break;
+          case 'cash':
+            hacknetState.credits += 100;
+            hacknetState.log = `cashout successful. +100 credits. total: ${hacknetState.credits}`;
+            break;
+          case 'status':
+            hacknetState.log = `node: ${hacknetState.node} | credits: ${hacknetState.credits} | trace: ${hacknetState.trace}%`;
+            break;
+          case 'exit':
+            addLine('disconnecting from hacknet...', 'hack-warn');
+            stopHacknet();
+            hacknetRender();
+            addLine('hacknet session ended.', 'info');
+            inputEl.focus();
+            return;
+          default:
+            hacknetState.log = `unknown command: "${cmd}". type "help" for list.`;
+        }
+
+        // update display stats line
+        hacknetState.display = hacknetState.display.replace(/credits: \d+/, `credits: ${hacknetState.credits}`);
+        hacknetState.display = hacknetState.display.replace(/trace: \d+%/, `trace: ${hacknetState.trace}%`);
+        hacknetState.display = hacknetState.display.replace(/connected to node: \w+/, `connected to node: ${hacknetState.node}`);
+        hacknetRender();
+      }
+
+      // ============================================================
+      //  KEYBOARD LISTENERS
+      // ============================================================
+      document.addEventListener('keydown', (e) => {
+        // Snake controls
+        if (snakeGameActive) {
+          const key = e.key;
+          if (key === 'Escape') {
+            e.preventDefault();
+            stopSnakeGame();
+            addLine('🐍 snake exited', 'warn');
+            updateSnakeOutput();
+            setTimeout(() => inputEl.focus(), 100);
+            return;
+          }
+          if (key.startsWith('Arrow')) {
+            e.preventDefault();
+            if (!snakeState) return;
+            let dx = 0, dy = 0;
+            if (key === 'ArrowUp') dy = -1;
+            else if (key === 'ArrowDown') dy = 1;
+            else if (key === 'ArrowLeft') dx = -1;
+            else if (key === 'ArrowRight') dx = 1;
+            if ((dx === -snakeState.dir.dx && dy === -snakeState.dir.dy)) return;
+            snakeState.nextDir = { dx, dy };
+          }
+          return;
+        }
+
+        // Hacknet uses the input field for commands, no special arrow keys needed
+        // But ESC can exit hacknet
+        if (hacknetActive && e.key === 'Escape') {
+          e.preventDefault();
+          stopHacknet();
+          hacknetRender();
+          addLine('hacknet session ended (ESC).', 'warn');
+          setTimeout(() => inputEl.focus(), 100);
+        }
+      });
+
+      // ============================================================
+      //  SHELL COMMAND DISPATCHER
+      // ============================================================
+      function handleCommand(cmd) {
+        const trimmed = cmd.trim();
+        if (!trimmed) return;
+
+        // echo command
+        addLine(trimmed, 'cmd-line');
+        const lower = trimmed.toLowerCase();
+
+        // If hacknet is active, route to hacknet handler
+        if (hacknetActive) {
+          hacknetHandleCommand(trimmed);
+          return;
+        }
+
+        if (lower === '/help') {
+          cmdHelp();
+        } else if (lower === '/stats') {
+          cmdStats();
+        } else if (lower === '/discord') {
+          cmdDiscord();
+        } else if (lower === '/about') {
+          cmdAbout();
+        } else if (lower === '/clear') {
+          clearOutput();
+          addLine('terminal cleared.', 'info');
+        } else if (lower === '/snake') {
+          stopHacknet();
+          startSnakeGame();
+        } else if (lower === '/hacknet') {
+          stopSnakeGame();
+          hacknetInit();
+        } else {
+          cmdUnknown(trimmed);
+        }
+      }
+
+      // input handler
+      inputEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const val = inputEl.value;
+          inputEl.value = '';
+          handleCommand(val);
+          if (snakeGameActive) inputEl.blur();
+        }
+      });
+
+      // focus input on terminal click
+      terminalScreen.addEventListener('click', () => {
+        if (!snakeGameActive) inputEl.focus();
+      });
+
+      // Override stopSnakeGame to refocus
+      const _stopSnake = stopSnakeGame;
+      stopSnakeGame = function() {
+        _stopSnake();
+        setTimeout(() => inputEl.focus(), 100);
+      };
+
+      // Override stopHacknet to refocus
+      const _stopHack = stopHacknet;
+      stopHacknet = function() {
+        _stopHack();
+        setTimeout(() => inputEl.focus(), 100);
+      };
+
+      // Initial hints
+      addLine('type /help to see commands', 'accent');
+      addLine('→ /snake for Snake  ·  /hacknet for hacking sim', 'info');
+    })();
+
   </script>
 </body>
 </html>
