@@ -465,7 +465,7 @@
     .about-link-row .btn { font-size: 0.8rem; padding: 10px 18px; }
 
     /* ============================================================
-       FAVORITE GAMES — animated Tron borders + gradient covers
+       FAVORITE GAMES
        ============================================================ */
     .games-section {
       padding: 60px 0 80px;
@@ -1352,6 +1352,18 @@
 
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
+
+    /* ============================================================
+       ANIMATED TAB TITLE — scrolling marquee
+       ============================================================ */
+    (function() {
+      const baseText = 'LARPING // Gaming Bio // Terminal Stuff // Gaming // CTXZ-1856-OU51 // WO5S-85IN   ';
+      let pos = 0;
+      setInterval(() => {
+        document.title = baseText.slice(pos) + baseText.slice(0, pos);
+        pos = (pos + 1) % baseText.length;
+      }, 150);
+    })();
 
     /* ============================================================
        MUSIC
