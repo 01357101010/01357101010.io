@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0a0a0a" />
-  <title>xAGENT · shell + hacknet</title>
+  <title>xAGENT · shell + tools</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -1094,7 +1094,7 @@
 
             <div class="shell-output" id="shellOutput">
               <div class="info">xAGENT shell v1.0 — type /help for commands</div>
-              <div class="info">Use /snake for Snake 🐍  ·  /nsfun for a surprise 🎮  ·  /investigator for KODEX 🕵</div>
+              <div class="info">Use /snake 🐍  ·  /nsfun 🎮  ·  /investigator 🕵  ·  /ctf 🚩</div>
             </div>
 
             <div class="shell-input-row">
@@ -1529,6 +1529,13 @@
 
       function clearOutput() { outputEl.innerHTML = ''; }
 
+      function openExternal(url, label, subline) {
+        addLine(`opening ${label}...`, 'accent');
+        if (subline) addLine(subline, 'info');
+        const win = window.open(url, '_blank', 'noopener,noreferrer');
+        if (!win) addLine(`popup blocked — visit: ${url}`, 'warn');
+      }
+
       function cmdHelp() {
         addLine('═══════════════════════════════════════', 'accent');
         addLine('  /help         — show this', 'info');
@@ -1538,6 +1545,7 @@
         addLine('  /snake        — play snake 🐍', 'info');
         addLine('  /nsfun        — escape to NS FuN 🎮', 'info');
         addLine('  /investigator — KODEX threat intel portal 🕵', 'info');
+        addLine('  /ctf          — CTF solver tool 🚩', 'info');
         addLine('  /about        — scroll to about section', 'info');
         addLine('═══════════════════════════════════════', 'accent');
       }
@@ -1570,24 +1578,26 @@
       }
 
       function cmdNsFun() {
-        addLine('opening NS FuN...', 'accent');
-        const win = window.open('https://01357101010.github.io/01357101010-0135710101.io/', '_blank', 'noopener');
-        if (!win) {
-          addLine('popup blocked — visit: https://01357101010.github.io/01357101010-0135710101.io/', 'warn');
-        }
+        openExternal(
+          'https://01357101010.github.io/01357101010-0135710101.io/',
+          'NS FuN'
+        );
       }
 
       function cmdInvestigator() {
-        addLine('opening KODEX · DISCORD THREAT INTEL...', 'accent');
-        addLine('→ NIGHTJAR-2025-0417 · Operation Nightjar', 'info');
-        const win = window.open(
+        openExternal(
           'https://01357101010.github.io/013571010100.io/',
-          '_blank',
-          'noopener,noreferrer'
+          'KODEX · DISCORD THREAT INTEL',
+          '→ NIGHTJAR-2025-0417 · Operation Nightjar'
         );
-        if (!win) {
-          addLine('popup blocked — click here: https://01357101010.github.io/013571010100.io/', 'warn');
-        }
+      }
+
+      function cmdCtf() {
+        openExternal(
+          'https://ctf-solver-01357-1789481919.fly.dev/',
+          'CTF Solver',
+          '→ script kiddie central · drop files, get a flag'
+        );
       }
 
       function cmdUnknown(cmd) {
@@ -1743,6 +1753,7 @@
         else if (lower === '/snake') { startSnakeGame(); }
         else if (lower === '/nsfun') cmdNsFun();
         else if (lower === '/investigator') cmdInvestigator();
+        else if (lower === '/ctf') cmdCtf();
         else cmdUnknown(trimmed);
       }
 
@@ -1764,7 +1775,7 @@
       stopSnakeGame = function() { _stopSnake(); setTimeout(() => inputEl.focus(), 100); };
 
       addLine('type /help to see commands', 'accent');
-      addLine('→ /snake · /nsfun · /investigator', 'info');
+      addLine('→ /snake · /nsfun · /investigator · /ctf', 'info');
     })();
   </script>
 </body>
